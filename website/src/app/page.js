@@ -7,6 +7,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = useState([])
   const [models, setModels] = useState([])
   const [selectedModel, setSelectedModel] = useState('llama2')
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const fetchModels = async () => {
@@ -26,6 +27,7 @@ export default function Home() {
     const newChatHistory = [...chatHistory, { role: 'user', content: message }]
     setChatHistory(newChatHistory)
     setMessage('')
+    setIsLoading(true)
 
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -50,6 +52,7 @@ export default function Home() {
       const read = async () => {
         const { done, value } = await reader.read()
         if (done) {
+          setIsLoading(false)
           return
         }
 
@@ -76,6 +79,8 @@ export default function Home() {
       }
 
       read()
+    } else {
+        setIsLoading(false)
     }
   }
 
@@ -90,6 +95,11 @@ export default function Home() {
               <p className="whitespace-pre-wrap">{chat.content}</p>
             </div>
           ))}
+          {isLoading && (
+            <div className="self-start p-4 rounded-lg bg-white text-gray-800">
+              <p className="whitespace-pre-wrap">Thinking...</p>
+            </div>
+          )}
         </div>
       </div>
       <div className="p-4 bg-white border-t border-gray-200">
@@ -115,7 +125,7 @@ export default function Home() {
           <button
             className="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             onClick={handleSendMessage}
-            disabled={!message.trim()}>
+            disabled={!message.trim() || isLoading}>
             Send
           </button>
         </div>
